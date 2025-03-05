@@ -20,6 +20,16 @@ def post_init_hook(cr, registry):
         _logger.info('Trying to match %d contacts to partner by email',
                      len(contacts))
         for contact in contacts:
+            if contact.partner_id:
+                other_contact = env["mail.mass_mailing.contact"].search([
+                    ('partner_id', '=', contact.partner_id.id),
+                    ('id', '!=', contact.id)
+                ])
+                if contact.list_ids & other_contact.mapped('list_ids'):
+                    _logger.info(
+                        "Partner already exists in one of these "
+                        "mailing lists %s" % contact.partner_id.display_name)
+                    continue
             partners = partner_model.search([
                 ('email', '=ilike', contact.email)
             ], limit=1)
